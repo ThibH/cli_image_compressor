@@ -11,52 +11,69 @@ import sys
 
 import typer
 
-import functions as f
+import config
+import functions
+import ui
+import history
 
 app = typer.Typer()
 
 
 def main():
     """Main loop of the software"""
-    f.welcome()
+    ui.display_welcome_message()
     user_choice = 0
-    while user_choice != len(f.OPTIONS):
-        user_choice = f.display_menu()
-        print()
-        f.OPTIONS[user_choice]["function"]()
+    while user_choice != len(config.OPTIONS):
+        ui.display_menu()
+        user_choice = ui.get_user_choice()
+        config.OPTIONS[user_choice]["function"]()
 
 
 @app.command()
-def compress(quality: int = typer.Option(-1,
-             help="Compression quality, from 1 (lower) to 95 (higher)")):
-    """
-    To compress 1 or more images to .jpg format.
-    """
-    f.compress(quality=quality)
+def compress(quality: int = typer.Option(-1, help="Compression quality, from 1 (lower) to 95 (higher)")):
+    """To compress 1 or more images to .jpg format."""
+
+    path = functions.ask_for_image_or_folder_to_convert()
+    if path is None:
+        return
+
+    destination_folder = functions.ask_for_destination_folder()
+    if destination_folder is None:
+        return
+
+    quality = functions.ask_for_quality()
+
+    files_to_convert = functions.get_files_to_convert(path=path)
+    for each_file in files_to_convert:
+        functions.compress(
+            source_path=each_file,
+            destination_folder=destination_folder,
+            quality=quality
+        )
 
 
 @app.command('wtf')
 def info():
     """To display information about the software."""
-    f.info()
+    ui.display_info_message()
 
 
 @app.command('history')
 def display_history():
     """To display your compression history."""
-    f.display_history()
+    history.display()
 
 
 @app.command('search')
 def search_in_history():
     """To search a string in filenames of your history."""
-    f.search_in_history()
+    history.search()
 
 
 @app.command('clear')
 def clear_history():
     """To clear your compression history."""
-    f.clear_history()
+    history.clear()
 
 
 if __name__ == "__main__":
